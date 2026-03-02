@@ -88,8 +88,8 @@ if [ -f ".env" ]; then
     log_warn "Arquivo .env já existe. Mantendo configurações existentes."
 else
     # Gerar senhas aleatórias e seguras
-    DB_PASSWORD=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9!@#$%' | head -c 32)
-    JWT_SECRET=$(openssl rand -base64 64)
+    DB_PASSWORD=$(openssl rand -hex 20)
+    JWT_SECRET=$(openssl rand -hex 48)
 
     cat > .env << EOF
 # ============================================================
