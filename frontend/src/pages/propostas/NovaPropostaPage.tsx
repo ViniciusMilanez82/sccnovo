@@ -82,11 +82,16 @@ export function NovaPropostaPage() {
     if (items.some((i) => !i.productId)) { setError('Selecione o produto em todos os itens.'); return; }
     if (items.some((i) => i.quantity <= 0)) { setError('A quantidade deve ser maior que zero.'); return; }
 
+    // Converter validUntil para ISO-8601 completo ou undefined
+    const validUntilISO = validUntil
+      ? new Date(validUntil + 'T00:00:00.000Z').toISOString()
+      : undefined;
+
     createMutation.mutate({
       clientId,
       discount,
       notes: notes || undefined,
-      validUntil: validUntil || undefined,
+      validUntil: validUntilISO,
       items: items.map((i) => ({
         productId: i.productId,
         quantity: Number(i.quantity),
