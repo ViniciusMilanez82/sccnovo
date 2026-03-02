@@ -3,6 +3,8 @@
 # ============================================================
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Copiar arquivos de dependências
@@ -26,6 +28,9 @@ RUN npm run build
 # ============================================================
 FROM node:20-alpine AS production
 
+# Instalar openssl (necessário para o Prisma no Alpine)
+RUN apk add --no-cache openssl wget
+
 WORKDIR /app
 
 # Instalar apenas dependências de produção
@@ -44,7 +49,7 @@ ENV PORT=3000
 EXPOSE 3000
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
   CMD wget -qO- http://localhost:3000/api/health || exit 1
 
 # Iniciar o servidor
