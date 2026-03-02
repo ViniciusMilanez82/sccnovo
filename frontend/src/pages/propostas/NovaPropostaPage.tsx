@@ -27,12 +27,12 @@ export function NovaPropostaPage() {
 
   const { data: clientsData } = useQuery({
     queryKey: ['clients-select'],
-    queryFn: () => clientsService.list({ limit: 200 }),
+    queryFn: () => clientsService.list({ limit: 100 }),
   });
 
   const { data: productsData } = useQuery({
     queryKey: ['products-select'],
-    queryFn: () => productsService.list({ active: true, limit: 200 }),
+    queryFn: () => productsService.list({ active: true, limit: 100 }),
   });
 
   const createMutation = useMutation({
