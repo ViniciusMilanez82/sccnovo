@@ -96,14 +96,12 @@ else
 # SCC-NG — Variáveis de Ambiente (geradas automaticamente)
 # Gerado em: $(date)
 # ============================================================
-
 # --- Banco de Dados PostgreSQL ---
 POSTGRES_USER=scc_user
-POSTGRES_PASSWORD=${DB_PASSWORD}
+POSTGRES_PASSWORD="${DB_PASSWORD}"
 POSTGRES_DB=scc_ng_db
-
 # --- Autenticação JWT ---
-JWT_SECRET=${JWT_SECRET}
+JWT_SECRET="${JWT_SECRET}"
 JWT_EXPIRES_IN=8h
 EOF
 
