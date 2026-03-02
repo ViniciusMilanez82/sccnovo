@@ -55,7 +55,7 @@ router.get('/:id/total', async (req: Request, res: Response, next: NextFunction)
 });
 
 router.patch('/:id/status',
-  authorize(UserRole.ADMIN, UserRole.GERENTE),
+  authorize(UserRole.ADMIN, UserRole.GERENTE, UserRole.VENDEDOR),
   [body('status').isIn(Object.values(ProposalStatus)).withMessage('Status inválido.')],
   async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);

@@ -47,10 +47,12 @@ export function NovaPropostaPage() {
 
   const handleProductChange = (index: number, productId: string) => {
     const product: Product | undefined = productsData?.data?.find((p: Product) => p.id === productId);
+    // unitPrice vem como Decimal do Prisma (string no JSON), converter para number
+    const unitPrice = product?.unitPrice ? Number(product.unitPrice) : 0;
     setItems((prev) =>
       prev.map((item, i) =>
         i === index
-          ? { ...item, productId, unitPrice: product?.unitPrice ?? 0 }
+          ? { ...item, productId, unitPrice }
           : item
       )
     );
@@ -81,6 +83,7 @@ export function NovaPropostaPage() {
     if (!clientId) { setError('Selecione um cliente.'); return; }
     if (items.some((i) => !i.productId)) { setError('Selecione o produto em todos os itens.'); return; }
     if (items.some((i) => i.quantity <= 0)) { setError('A quantidade deve ser maior que zero.'); return; }
+    if (items.some((i) => Number(i.unitPrice) <= 0)) { setError('O preço unitário deve ser maior que zero em todos os itens.'); return; }
 
     // Converter validUntil para ISO-8601 completo ou undefined
     const validUntilISO = validUntil

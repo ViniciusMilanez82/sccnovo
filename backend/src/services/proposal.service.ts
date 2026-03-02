@@ -15,7 +15,7 @@ export interface CreateProposalInput {
   userId: string;
   discount?: number;
   notes?: string;
-  validUntil?: Date;
+  validUntil?: Date | string;
   items: ProposalItemInput[];
 }
 
@@ -97,6 +97,15 @@ export const proposalService = {
 
     const number = await generateProposalNumber();
 
+    // Converter validUntil para Date se vier como string ISO
+    let validUntilDate: Date | undefined;
+    if (input.validUntil) {
+      validUntilDate = input.validUntil instanceof Date
+        ? input.validUntil
+        : new Date(input.validUntil);
+      if (isNaN(validUntilDate.getTime())) validUntilDate = undefined;
+    }
+
     return prisma.proposal.create({
       data: {
         number,
@@ -104,7 +113,7 @@ export const proposalService = {
         userId: input.userId,
         discount: input.discount || 0,
         notes: input.notes,
-        validUntil: input.validUntil,
+        validUntil: validUntilDate,
         status: ProposalStatus.RASCUNHO,
         items: {
           create: input.items.map((item) => ({
