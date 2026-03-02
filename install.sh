@@ -147,14 +147,16 @@ echo ""
 log_success "Banco de dados pronto."
 
 # ============================================================
-# PASSO 6: Executar migrações e seed
+# PASSO 6: Criar tabelas e dados iniciais
 # ============================================================
 log_step "Criando tabelas e dados iniciais..."
 
-$COMPOSE_CMD exec -T backend npx prisma migrate deploy
-log_success "Migrações executadas."
+# Usar db push (sem arquivos de migration — schema como fonte de verdade)
+$COMPOSE_CMD exec -T backend npx prisma db push --accept-data-loss
+log_success "Tabelas criadas/sincronizadas com o schema."
 
-$COMPOSE_CMD exec -T backend npm run db:seed
+# Executar seed em JavaScript puro (sem ts-node)
+$COMPOSE_CMD exec -T backend node prisma/seed.js
 log_success "Dados iniciais criados."
 
 # ============================================================
