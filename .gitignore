@@ -40,3 +40,4 @@ backend/prisma/migrations/
 
 # Misc
 *.tsbuildinfo
+.github/workflows/
