@@ -11,6 +11,7 @@ import { proposalRouter } from './routes/proposal.routes';
 import { contractRouter } from './routes/contract.routes';
 import { invoiceRouter } from './routes/invoice.routes';
 import { receivableRouter } from './routes/receivable.routes';
+import { dashboardRouter } from './routes/dashboard.routes';
 import { userRouter } from './routes/user.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
@@ -42,6 +43,7 @@ app.use('/api/proposals', proposalRouter);
 app.use('/api/contracts', contractRouter);
 app.use('/api/invoices', invoiceRouter);
 app.use('/api/receivables', receivableRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 // Middleware de tratamento de erros (deve ser o último)
 app.use(errorHandler);

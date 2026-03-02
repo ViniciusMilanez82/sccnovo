@@ -6,6 +6,8 @@ import { ClientesPage } from './pages/clientes/ClientesPage';
 import { ProdutosPage } from './pages/produtos/ProdutosPage';
 import { PropostasPage } from './pages/propostas/PropostasPage';
 import { ContratosPage } from './pages/contratos/ContratosPage';
+import { FaturamentoPage } from './pages/faturamento/FaturamentoPage';
+import { FinanceiroPage } from './pages/financeiro/FinanceiroPage';
 import { PrivateRoute } from './components/layout/PrivateRoute';
 import { MainLayout } from './components/layout/MainLayout';
 
@@ -35,6 +37,8 @@ function App() {
               <Route path="/produtos" element={<ProdutosPage />} />
               <Route path="/propostas" element={<PropostasPage />} />
               <Route path="/contratos" element={<ContratosPage />} />
+              <Route path="/faturamento" element={<FaturamentoPage />} />
+              <Route path="/financeiro" element={<FinanceiroPage />} />
             </Route>
           </Route>
 
