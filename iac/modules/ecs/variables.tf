@@ -1,0 +1,11 @@
+variable "project_name" {}
+variable "vpc_id" {}
+variable "public_subnets" {}
+variable "private_subnets" {}
+variable "alb_security_group" {}
+variable "ecs_security_group" {}
+variable "aws_region" {}
+variable "db_endpoint" {}
+variable "db_port" {}
+variable "db_name" {}
+variable "jwt_secret_arn" {}
