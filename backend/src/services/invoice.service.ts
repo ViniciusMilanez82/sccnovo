@@ -132,7 +132,7 @@ export const invoiceService = {
 
   async cancel(id: string) {
     const invoice = await this.getById(id);
-    if ([InvoiceStatus.PAGA, InvoiceStatus.CANCELADA].includes(invoice.status)) {
+    if (([InvoiceStatus.PAGA, InvoiceStatus.CANCELADA] as InvoiceStatus[]).includes(invoice.status)) {
       throw new AppError('Esta fatura não pode ser cancelada.', 422);
     }
     return prisma.invoice.update({

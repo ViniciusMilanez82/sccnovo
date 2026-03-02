@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
 
@@ -39,12 +39,14 @@ router.post(
       }
 
       const secret = process.env.JWT_SECRET as string;
-      const expiresIn = process.env.JWT_EXPIRES_IN || '8h';
+      const jwtOptions: SignOptions = {
+        expiresIn: (process.env.JWT_EXPIRES_IN || '8h') as SignOptions['expiresIn'],
+      };
 
       const token = jwt.sign(
         { userId: user.id, role: user.role },
         secret,
-        { expiresIn }
+        jwtOptions
       );
 
       res.status(200).json({

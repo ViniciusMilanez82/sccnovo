@@ -84,7 +84,12 @@ export const contractService = {
     if (proposal.status !== ProposalStatus.APROVADA) {
       throw new AppError('Apenas propostas aprovadas podem ser convertidas em contrato.', 422);
     }
-    if (proposal.contract) {
+
+    // Verificar se já existe contrato vinculado a esta proposta
+    const existingContract = await prisma.contract.findUnique({
+      where: { proposalId },
+    });
+    if (existingContract) {
       throw new AppError('Esta proposta já foi convertida em contrato.', 409);
     }
 

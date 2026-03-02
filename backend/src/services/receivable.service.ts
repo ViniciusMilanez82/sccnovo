@@ -1,4 +1,4 @@
-import { PrismaClient, InvoiceStatus } from '@prisma/client';
+import { PrismaClient, InvoiceStatus, PaymentMethod } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
@@ -7,7 +7,7 @@ export interface PaymentInput {
   invoiceId: string;
   paidAmount: number;
   paymentDate: Date;
-  paymentMethod: 'BOLETO' | 'PIX' | 'TRANSFERENCIA' | 'DINHEIRO' | 'CARTAO';
+  paymentMethod: PaymentMethod;
   notes?: string;
 }
 
@@ -25,7 +25,7 @@ export const receivableService = {
     const { status, clientId, dueDateFrom, dueDateTo, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
-    const where = {
+    const where: Record<string, unknown> = {
       ...(status && { status }),
       ...(clientId && { contract: { clientId } }),
       ...(dueDateFrom || dueDateTo
@@ -79,7 +79,10 @@ export const receivableService = {
     }
 
     // Calcular total já pago
-    const totalPaid = invoice.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const totalPaid = invoice.payments.reduce(
+      (sum: number, p: { amount: unknown }) => sum + Number(p.amount),
+      0
+    );
     const remaining = Number(invoice.amount) - totalPaid;
 
     if (input.paidAmount > remaining + 0.01) {

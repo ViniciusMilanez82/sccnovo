@@ -43,8 +43,8 @@ model User {
 // ============================================================
 
 enum PersonType {
-  PF // Pessoa Física
-  PJ // Pessoa Jurídica
+  PF
+  PJ
 }
 
 enum ClientStatus {
@@ -54,20 +54,20 @@ enum ClientStatus {
 }
 
 model Client {
-  id             String       @id @default(uuid())
-  personType     PersonType
-  name           String       // Nome ou Razão Social
-  document       String       @unique // CPF ou CNPJ
-  stateId        String?      // Inscrição Estadual
-  email          String?
-  phone          String?
-  status         ClientStatus @default(ATIVO)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id         String       @id @default(uuid())
+  personType PersonType
+  name       String
+  document   String       @unique
+  stateId    String?
+  email      String?
+  phone      String?
+  status     ClientStatus @default(ATIVO)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
-  addresses  Address[]
-  proposals  Proposal[]
-  contracts  Contract[]
+  addresses Address[]
+  proposals Proposal[]
+  contracts Contract[]
 
   @@map("clients")
 }
@@ -89,12 +89,16 @@ model Address {
   @@map("addresses")
 }
 
+// ============================================================
+// MÓDULO: PRODUTOS
+// ============================================================
+
 model Product {
-  id          String  @id @default(uuid())
-  code        String  @unique
+  id          String   @id @default(uuid())
+  code        String   @unique
   description String
-  unitPrice   Decimal @db.Decimal(10, 2)
-  active      Boolean @default(true)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -145,7 +149,7 @@ model ProposalItem {
   unitPrice  Decimal @db.Decimal(10, 2)
   periodDays Int     @default(30)
 
-  proposal Proposal @relation(fields: [proposalId], references: [id])
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
   product  Product  @relation(fields: [productId], references: [id])
 
   @@map("proposal_items")
@@ -175,7 +179,7 @@ model Contract {
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
-  proposal Contract?      @relation("ProposalContract")
+  proposal Proposal?      @relation(fields: [proposalId], references: [id])
   client   Client         @relation(fields: [clientId], references: [id])
   user     User           @relation(fields: [userId], references: [id])
   items    ContractItem[]
@@ -191,7 +195,7 @@ model ContractItem {
   quantity   Int
   unitPrice  Decimal @db.Decimal(10, 2)
 
-  contract Contract @relation(fields: [contractId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
   product  Product  @relation(fields: [productId], references: [id])
 
   @@map("contract_items")
@@ -203,7 +207,9 @@ model ContractItem {
 
 enum InvoiceStatus {
   PENDENTE
-  EMITIDA
+  ENVIADA
+  VENCIDA
+  PAGA
   CANCELADA
 }
 
@@ -215,11 +221,13 @@ model Invoice {
   issueDate  DateTime      @default(now())
   dueDate    DateTime
   amount     Decimal       @db.Decimal(10, 2)
+  paidAt     DateTime?
+  notes      String?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
-  contract     Contract      @relation(fields: [contractId], references: [id])
-  receivables  Receivable[]
+  contract Contract  @relation(fields: [contractId], references: [id])
+  payments Payment[]
 
   @@map("invoices")
 }
@@ -228,25 +236,24 @@ model Invoice {
 // MÓDULO: FINANCEIRO
 // ============================================================
 
-enum ReceivableStatus {
-  ABERTO
-  PAGO
-  VENCIDO
-  CANCELADO
+enum PaymentMethod {
+  BOLETO
+  PIX
+  TRANSFERENCIA
+  DINHEIRO
+  CARTAO
 }
 
-model Receivable {
-  id        String           @id @default(uuid())
-  invoiceId String
-  dueDate   DateTime
-  amount    Decimal          @db.Decimal(10, 2)
-  paidAt    DateTime?
-  paidAmount Decimal?        @db.Decimal(10, 2)
-  status    ReceivableStatus @default(ABERTO)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+model Payment {
+  id            String        @id @default(uuid())
+  invoiceId     String
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentDate   DateTime
+  paymentMethod PaymentMethod
+  notes         String?
+  createdAt     DateTime      @default(now())
 
   invoice Invoice @relation(fields: [invoiceId], references: [id])
 
-  @@map("receivables")
+  @@map("payments")
 }

@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { PrismaClient, UserRole } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
 import { AuthPayload } from '../middleware/auth';
@@ -39,10 +39,13 @@ export const authService = {
     }
 
     const secret = process.env.JWT_SECRET as string;
-    const expiresIn = process.env.JWT_EXPIRES_IN || '8h';
+    // Usar SignOptions tipado para evitar erro de expiresIn
+    const options: SignOptions = {
+      expiresIn: (process.env.JWT_EXPIRES_IN || '8h') as SignOptions['expiresIn'],
+    };
 
     const payload: AuthPayload = { userId: user.id, role: user.role };
-    const token = jwt.sign(payload, secret, { expiresIn });
+    const token = jwt.sign(payload, secret, options);
 
     return {
       token,
@@ -93,7 +96,7 @@ export const authService = {
   },
 
   async updateUser(id: string, input: UpdateUserInput) {
-    await this.getUserById(id); // valida existência
+    await this.getUserById(id);
 
     if (input.email) {
       const existing = await prisma.user.findFirst({
