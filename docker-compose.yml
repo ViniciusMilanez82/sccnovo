@@ -1,0 +1,96 @@
+version: '3.9'
+
+# ============================================================
+# SCC-NG — Docker Compose para VPS Hostinger
+# Serviços: postgresql | backend | frontend
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Banco de Dados PostgreSQL
+  # (compatível com o contêiner já existente na Hostinger)
+  # ----------------------------------------------------------
+  postgresql:
+    image: postgres:17
+    container_name: scc-ng-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - scc-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ----------------------------------------------------------
+  # Backend — API Node.js + Express + Prisma
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scc-ng-backend
+    restart: unless-stopped
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+    networks:
+      - scc-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ----------------------------------------------------------
+  # Frontend — React + Nginx (reverse proxy para o backend)
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: scc-ng-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - scc-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+# ----------------------------------------------------------
+# Volumes persistentes
+# ----------------------------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+
+# ----------------------------------------------------------
+# Rede interna dos serviços
+# ----------------------------------------------------------
+networks:
+  scc-network:
+    driver: bridge
