@@ -1,0 +1,252 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// MÓDULO: SEGURANÇA
+// ============================================================
+
+enum UserRole {
+  ADMIN
+  GERENTE
+  VENDEDOR
+  FINANCEIRO
+  OPERACIONAL
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(VENDEDOR)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proposals Proposal[]
+  contracts Contract[]
+
+  @@map("users")
+}
+
+// ============================================================
+// MÓDULO: CADASTROS
+// ============================================================
+
+enum PersonType {
+  PF // Pessoa Física
+  PJ // Pessoa Jurídica
+}
+
+enum ClientStatus {
+  ATIVO
+  INATIVO
+  INADIMPLENTE
+}
+
+model Client {
+  id             String       @id @default(uuid())
+  personType     PersonType
+  name           String       // Nome ou Razão Social
+  document       String       @unique // CPF ou CNPJ
+  stateId        String?      // Inscrição Estadual
+  email          String?
+  phone          String?
+  status         ClientStatus @default(ATIVO)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  addresses  Address[]
+  proposals  Proposal[]
+  contracts  Contract[]
+
+  @@map("clients")
+}
+
+model Address {
+  id           String  @id @default(uuid())
+  clientId     String
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String  @db.Char(2)
+  zipCode      String
+  isMain       Boolean @default(false)
+
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@map("addresses")
+}
+
+model Product {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  description String
+  unitPrice   Decimal @db.Decimal(10, 2)
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  proposalItems ProposalItem[]
+  contractItems ContractItem[]
+
+  @@map("products")
+}
+
+// ============================================================
+// MÓDULO: COMERCIAL
+// ============================================================
+
+enum ProposalStatus {
+  RASCUNHO
+  AGUARDANDO_APROVACAO
+  APROVADA
+  REPROVADA
+  CONVERTIDA
+  CANCELADA
+}
+
+model Proposal {
+  id         String         @id @default(uuid())
+  number     String         @unique
+  clientId   String
+  userId     String
+  status     ProposalStatus @default(RASCUNHO)
+  discount   Decimal        @default(0) @db.Decimal(5, 2)
+  notes      String?
+  validUntil DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  client   Client         @relation(fields: [clientId], references: [id])
+  user     User           @relation(fields: [userId], references: [id])
+  items    ProposalItem[]
+  contract Contract?
+
+  @@map("proposals")
+}
+
+model ProposalItem {
+  id         String  @id @default(uuid())
+  proposalId String
+  productId  String
+  quantity   Int
+  unitPrice  Decimal @db.Decimal(10, 2)
+  periodDays Int     @default(30)
+
+  proposal Proposal @relation(fields: [proposalId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@map("proposal_items")
+}
+
+// ============================================================
+// MÓDULO: LOCAÇÃO
+// ============================================================
+
+enum ContractStatus {
+  ATIVO
+  ENCERRADO
+  CANCELADO
+  SUSPENSO
+}
+
+model Contract {
+  id         String         @id @default(uuid())
+  number     String         @unique
+  proposalId String?        @unique
+  clientId   String
+  userId     String
+  status     ContractStatus @default(ATIVO)
+  startDate  DateTime
+  endDate    DateTime?
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  proposal Contract?      @relation("ProposalContract")
+  client   Client         @relation(fields: [clientId], references: [id])
+  user     User           @relation(fields: [userId], references: [id])
+  items    ContractItem[]
+  invoices Invoice[]
+
+  @@map("contracts")
+}
+
+model ContractItem {
+  id         String  @id @default(uuid())
+  contractId String
+  productId  String
+  quantity   Int
+  unitPrice  Decimal @db.Decimal(10, 2)
+
+  contract Contract @relation(fields: [contractId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@map("contract_items")
+}
+
+// ============================================================
+// MÓDULO: FATURAMENTO
+// ============================================================
+
+enum InvoiceStatus {
+  PENDENTE
+  EMITIDA
+  CANCELADA
+}
+
+model Invoice {
+  id         String        @id @default(uuid())
+  number     String        @unique
+  contractId String
+  status     InvoiceStatus @default(PENDENTE)
+  issueDate  DateTime      @default(now())
+  dueDate    DateTime
+  amount     Decimal       @db.Decimal(10, 2)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  contract     Contract      @relation(fields: [contractId], references: [id])
+  receivables  Receivable[]
+
+  @@map("invoices")
+}
+
+// ============================================================
+// MÓDULO: FINANCEIRO
+// ============================================================
+
+enum ReceivableStatus {
+  ABERTO
+  PAGO
+  VENCIDO
+  CANCELADO
+}
+
+model Receivable {
+  id        String           @id @default(uuid())
+  invoiceId String
+  dueDate   DateTime
+  amount    Decimal          @db.Decimal(10, 2)
+  paidAt    DateTime?
+  paidAmount Decimal?        @db.Decimal(10, 2)
+  status    ReceivableStatus @default(ABERTO)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@map("receivables")
+}
