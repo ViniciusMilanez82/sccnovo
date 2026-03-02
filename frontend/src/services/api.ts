@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Em produção, o Nginx faz proxy de /api/ para o backend (sem URL absoluta).
+// Em desenvolvimento local, o Vite proxy também redireciona /api para localhost:3000.
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
